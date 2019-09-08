@@ -5,7 +5,8 @@
     "dependencies": {
         "core": "*",
         "radio": "*",
-        "neopixel": "github:microsoft/pxt-neopixel#v0.6.12"
+        "neopixel": "github:microsoft/pxt-neopixel#v0.6.12",
+        "crickit": "github:adafruit/pxt-crickit#v0.0.32"
     },
     "files": [
         "README.md",

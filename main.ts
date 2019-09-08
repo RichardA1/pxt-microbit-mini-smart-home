@@ -11,6 +11,13 @@ enum SwitchState {
     off
 }
 
+enum DoorState {
+    //% block="ON"
+    high,
+    //% block="OFF"
+    low
+}
+
 enum LightRoom {
     //% block="Deck"
     deck,
@@ -46,7 +53,7 @@ let Party_Mode_State: boolean = false
 let Door_Open_State: boolean = false
 let PIR_State: boolean = false
 let Fan_State: boolean = false
-pins.setPull(DigitalPin.P12, PinPullMode.PullUp)
+pins.setPull(DigitalPin.P2, PinPullMode.PullUp)
 pins.setPull(DigitalPin.P1, PinPullMode.PullUp)
 
 /**
@@ -55,7 +62,7 @@ pins.setPull(DigitalPin.P1, PinPullMode.PullUp)
 //% weight=100 color=#0fbc11 icon="\uf015" block="Smart Home Output"
 namespace smarthomeoutput {
     let LEDs: neopixel.Strip = null
-    LEDs = neopixel.create(DigitalPin.P8, 5, NeoPixelMode.RGB)
+    LEDs = neopixel.create(DigitalPin.P16, 5, NeoPixelMode.RGB)
 
     /**
      * Use this to turn the light from a room on or off.
@@ -64,10 +71,11 @@ namespace smarthomeoutput {
      */
     //% block
     //% color=#f4b541
-    export function Lights(room: LightRoom, state: SwitchState): void {
+    export function Lights(room: LightRoom, state: SwitchState, color: LightColor): void {
         // Add code here
         let WhatRoom = 0
         let WhatState = ""
+        let whatColor = ""
         if (state == SwitchState.on) {
             WhatState = "on"
         } else {
@@ -91,7 +99,24 @@ namespace smarthomeoutput {
                 break;
         }
         if (WhatState == "on") {
-            LEDs.setPixelColor(WhatRoom, neopixel.colors(NeoPixelColors.White))
+            //LEDs.setPixelColor(WhatRoom, neopixel.colors(NeoPixelColors.White))
+            switch (color) {
+                case LightColor.Red:
+                    LEDs.setPixelColor(WhatRoom, neopixel.colors(NeoPixelColors.Red))
+                    break;
+                case LightColor.Green:
+                    LEDs.setPixelColor(WhatRoom, neopixel.colors(NeoPixelColors.Green))
+                    break;
+                case LightColor.Blue:
+                    LEDs.setPixelColor(WhatRoom, neopixel.colors(NeoPixelColors.Blue))
+                    break;
+                case LightColor.Purple:
+                    LEDs.setPixelColor(WhatRoom, neopixel.colors(NeoPixelColors.Purple))
+                    break;
+                case LightColor.White:
+                    LEDs.setPixelColor(WhatRoom, neopixel.colors(NeoPixelColors.White))
+                    break;
+            }
         } else {
             LEDs.setPixelColor(WhatRoom, neopixel.rgb(0, 0, 0))
         }
@@ -186,12 +211,30 @@ namespace smarthomeoutput {
      */
     //% block
     //% color=#f4b541
-    export function All_lights(state: SwitchState): void {
+    export function All_lights(state: SwitchState, color: LightColor): void {
         if (state == SwitchState.on) {
             for (let i = 0; i < 8; i++) {
-                LEDs.setPixelColor(i, neopixel.colors(NeoPixelColors.White));
-                LEDs.show()
+                //LEDs.setPixelColor(i, neopixel.colors(NeoPixelColors.White));
+                switch (color) {
+                    case LightColor.Red:
+                        LEDs.setPixelColor(i, neopixel.colors(NeoPixelColors.Red))
+                        break;
+                    case LightColor.Green:
+                        LEDs.setPixelColor(i, neopixel.colors(NeoPixelColors.Green))
+                        break;
+                    case LightColor.Blue:
+                        LEDs.setPixelColor(i, neopixel.colors(NeoPixelColors.Blue))
+                        break;
+                    case LightColor.Purple:
+                        LEDs.setPixelColor(i, neopixel.colors(NeoPixelColors.Purple))
+                        break;
+                    case LightColor.White:
+                        LEDs.setPixelColor(i, neopixel.colors(NeoPixelColors.White))
+                        break;
+                }
+
             }
+            LEDs.show()
             Deck_Light_State = "on"
             Attic_Light_State = "on"
             Bed_Room_Light_State = "on"
@@ -212,17 +255,17 @@ namespace smarthomeoutput {
      * Party Mode lets you start the party or end it. 
      * @param room describe value here, eg: Bedroom
      */
-    /**    //% block
-   *    export function Fan(state: SwitchState): void {
-   *        if (state == SwitchState.on) {
-   *            Fan_State = true
-   *            pins.digitalWritePin(DigitalPin.P2, 0)
-   *        } else {
-   *            Fan_State = false
-   *            pins.digitalWritePin(DigitalPin.P2, 1)
-   *        }
-   *    }
-   */
+    //% block
+    export function Fan(state: SwitchState): void {
+        if (state == SwitchState.on) {
+            Fan_State = true
+            crickit.motor1.run(100)
+        } else {
+            Fan_State = false
+            crickit.motor1.run(0)
+        }
+    }
+
 }
 
 /**
@@ -232,30 +275,42 @@ namespace smarthomeoutput {
 namespace smarthomeinput {
 
     /**
+     * If the Door is Open, this will return True.
+     */
+    //% blockId=door_open block="Door is Open"
+    export function DoorOpen(): boolean {
+        if (crickit.signal2.analogRead() < 200) {
+            return false
+        } else {
+            return true
+        }
+    }
+
+    /**
      * If the Door is closed, this will return True.
      */
-    //% blockId=door_test block="Door is closed"
-    export function Door(): boolean {
-        if (pins.digitalReadPin(DigitalPin.P12)) {
-            Door_Open_State = false
+    //% blockId=door_closed block="Door is Closed"
+    export function DoorClosed(): boolean {
+        if (crickit.signal2.analogRead() < 200) {
+            return true
         } else {
-            Door_Open_State = true
+            return false
         }
-        return Door_Open_State
     }
+
     /**
-     * Is there movement? This will return a Boolean value (true or false). When there is movement, this will be true for about 5 seconds.
+     * Is there movement? This will return a Boolean value (true or false). When there is movement, this will be true for about 5 seconds, but it will take 12 seconds to detect new movement.
      */
     //% blockId=pir_sensor block="Something moved"
-    //% 
     export function Motion(): boolean {
-        if (pins.digitalReadPin(DigitalPin.P1)) {
+        if (crickit.signal1.digitalRead()) {
             PIR_State = true
         } else {
             PIR_State = false
         }
         return PIR_State
     }
+
     /**
  * Is the party mode active? This will return a Boolean value (true or false) 
  */
@@ -263,20 +318,46 @@ namespace smarthomeinput {
     export function Party(): boolean {
         return Party_Mode_State
     }
+
     /**
 * Is the Fan turned on? This will return a Boolean value (true or false) 
 */
-    /**   //% blockId=fan_sensor block="The Fan is on"
-   *   export function Fan(): boolean {
-   *        return Fan_State
-    *   }
-   */
+    //% blockId=fan_sensor block="The Fan is on"
+    export function Fan(): boolean {
+        return Fan_State
+    }
+
     /**
-     * Is the it dark outside? This will return a Boolean value (true or false)
+     * If it is light outside, this will return a value of True
  */
-    //% blockId=lux_sensor block="The sun is out"
+    //% blockId=sunup block="The sun is up"
     export function SunUP(): boolean {
         if (input.lightLevel() > 4) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    /**
+     * If it is dark outside, this will return a value of True
+ */
+    //% blockId=sundown block="The sun is down"
+    export function SunDown(): boolean {
+        if (input.lightLevel() > 4) {
+            return false
+        } else {
+            return true
+        }
+    }
+
+    /**
+     * Is there an earthquake going on now? 
+     * @param room describe value here, eg: Bedroom
+     */
+    //% block
+    export function Earthquake(): boolean {
+        if (200 < input.acceleration(Dimension.X)) {
             return true
         } else {
             return false
