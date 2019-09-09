@@ -19,3 +19,6 @@ Read more at https://makecode.microbit.org/extensions
 * for PXT/microbit
 (The metadata above is needed for package search.)
 
+This Extention supports a Mini Smart Home project using the Microbit and Adafruit's Circuit Playground Express.
+
+For a full list of parts needed go to: http://www.adafruit.com/wishlists/493059
