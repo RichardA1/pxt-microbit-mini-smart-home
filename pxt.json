@@ -1,7 +1,7 @@
 {
     "name": "pxt-microbit-mini-smart-home",
     "version": "0.0.2",
-    "description": "",
+    "description": "This adds custom blocks for Smart Home Input and Output.",
     "dependencies": {
         "core": "*",
         "radio": "*",
